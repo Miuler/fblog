@@ -124,12 +124,24 @@ fn extract_string_values(log_entry: &Map<String, Value>) -> BTreeMap<String, Str
     .iter()
     .filter_map(|(key, value)| {
       match value {
-          Value::String(ref string_value) => Some((key.to_owned(), string_value.to_string())),
-          Value::Bool(ref bool_value) => Some((key.to_owned(), bool_value.to_string())),
-          Value::Number(ref number_value) => Some((key.to_owned(), number_value.to_string())),
-          Value::Array(_) => None, // currently not supported
-          Value::Object(_) => None, // currently not supported
-          Value::Null => None,
+        Value::String(ref string_value) => Some((key.to_owned(), string_value.to_string())),
+        Value::Bool(ref bool_value) => Some((key.to_owned(), bool_value.to_string())),
+        Value::Number(ref number_value) => Some((key.to_owned(), number_value.to_string())),
+        Value::Array(ref array_value) => {
+          let json_string: String = match serde_json::to_string(&array_value) {
+            Ok(value) => value,
+            Err(_) => "Error in parse".to_string(),
+          };
+          Some((key.to_owned(), json_string)) // FIXME improve this
+        }
+        Value::Object(ref object_value) => {
+          let json_string: String = match serde_json::to_string(&object_value) {
+            Ok(value) => value,
+            Err(_) => "Error in parse".to_string(),
+          };
+          Some((key.to_owned(), json_string)) // FIXME improve this
+        }
+        Value::Null => None,
       }
     })
     .collect()
